@@ -15,10 +15,6 @@ class Ball:
         self.pocketed = False
 
 
-def find_contours(board: Image, image: Image) -> List:
-    pass
-
-
 def find_board(image: Image) -> Image:
     """
     param1: image
@@ -27,6 +23,19 @@ def find_board(image: Image) -> Image:
     """
     pass
 
+
+def find_contours(board: Image, image: Image) -> List:
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray_blank_board = cv2.cvtColor(board, cv2.COLOR_BGR2GRAY)
+    diff = cv2.absdiff(gray_image, gray_blank_board)
+    cv2.imwrite(r"images\diff.jpg", diff)
+    _, thresh = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)
+    kernel = np.ones((8, 5), np.uint8)
+    thresh = cv2.dilate(thresh, kernel, iterations=1)
+    thresh = cv2.erode(thresh, kernel, iterations=1)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 20]
+    return filtered_contours
 
 def find_ball_color(image: Image, ball: Ball) -> str:
     """
@@ -134,5 +143,5 @@ def main(board: Image, image: Image):
 
 if __name__ == "__main__":
     board = cv2.imread(r"images\board1_no_balls.jpg")
-    image = cv2.imread(r"images\board2.jpg")
+    image = cv2.imread(r"images\board1.jpg")
     main(board, image)
