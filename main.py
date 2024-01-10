@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 def find_balls(blank_table_img_path, table_with_balls_img_path, output_img_path):
     # Load the images
     blank_table_img = cv2.imread(blank_table_img_path)
