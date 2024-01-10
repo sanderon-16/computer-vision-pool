@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 def find_balls(blank_table_img_path, table_with_balls_img_path, output_img_path):
     # Load the images
     blank_table_img = cv2.imread(blank_table_img_path)
@@ -43,6 +44,7 @@ def find_balls(blank_table_img_path, table_with_balls_img_path, output_img_path)
 
     # Return the list of ball positions
     return ball_positions
+
 
 # Example usage:
 ball_positions = find_balls("blank_table.jpg", "pool_table_with_balls.jpg", "marked_table.jpg")
