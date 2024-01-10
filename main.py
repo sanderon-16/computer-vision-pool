@@ -15,6 +15,10 @@ class Ball:
         self.pocketed = False
 
 
+def find_contours(board: Image, image: Image) -> List:
+    pass
+
+
 def find_board(image: Image) -> Image:
     """
     param1: image
@@ -22,19 +26,6 @@ def find_board(image: Image) -> Image:
     return: image
     """
     pass
-
-
-def find_contours(board: Image, image: Image) -> List:
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    gray_blank_board = cv2.cvtColor(board, cv2.COLOR_BGR2GRAY)
-    diff = cv2.absdiff(gray_image, gray_blank_board)
-    _, thresh = cv2.threshold(diff, 20, 255, cv2.THRESH_BINARY)
-    kernel = np.ones((5, 5), np.uint8)
-    thresh = cv2.dilate(thresh, kernel, iterations=1)
-    thresh = cv2.erode(thresh, kernel, iterations=1)
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 60]
-    return filtered_contours
 
 
 def find_ball_color(image: Image, ball: Ball) -> str:
@@ -95,28 +86,53 @@ def find_cue(image: Image) -> List[Tuple[float, float]]:
     pass
 
 
-def main(board: Image, image: Image):
-    balls = find_balls(board, image)
-    for ball in balls:
-        print(ball.position)
-
-
 def show_image(image: Image):
     cv2.imshow("Image", image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 
-def subtract_board(board: Image, image: Image) -> Image:
+def find_white_ball(image: Image, balls: List[Ball]) -> Ball:
     """
-    param1: board
-    param2: image
-    Subtract the board from the image and return the image with only the balls
-    return: image
+    param1: image
+    param2: balls
+    Find the white ball in an image and return the white ball
+    return: Ball
     """
+    white_ball = None
+    max_white_value = -1  # To track the maximum intensity value of white found
+    for ball in balls:
+        x, y = ball.position
+        radius = ball.radius
+        roi = image[y - radius:y + radius, x - radius:x + radius]
+        if roi.size == 0 or roi.shape[0] < radius * 2 or roi.shape[1] < radius * 2:
+            continue
+        roi_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+        avg_intensity = np.mean(roi_hsv[:, :, 2])
+        if avg_intensity > max_white_value:
+            max_white_value = avg_intensity
+            white_ball = ball
+
+    if white_ball is not None:
+        x, y = white_ball.position
+        radius = white_ball.radius
+        cv2.circle(image, (x, y), radius, (0, 0, 255), 2)  # Red circle
+        cv2.putText(image, 'Cue Ball', (x - radius, y - radius - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+    return white_ball
+
+
+def main(board: Image, image: Image):
+    balls = find_balls(board, image)
+    for ball in balls:
+        print(ball.position)
+    white_ball = find_white_ball(image, balls)
+    print("White ball position:", end=" ")
+    print(white_ball.position)
+    show_image(image)
+
 
 
 if __name__ == "__main__":
-    board = cv2.imread("blank_table.jpg")
-    image = cv2.imread("pool_table_with_balls.jpg")
+    board = cv2.imread(r"images\board1_no_balls.jpg")
+    image = cv2.imread(r"images\board2.jpg")
     main(board, image)
