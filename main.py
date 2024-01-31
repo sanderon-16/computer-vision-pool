@@ -145,6 +145,6 @@ def main(board: Image, image: Image):
 
 
 if __name__ == "__main__":
-    board = cv2.imread(r"images\blank_board1701.jpg")
+    board = cv2.imread(r"images\board1.jpg")
     image = cv2.imread(r"images\board_balls1701.jpg")
     main(board, image)
