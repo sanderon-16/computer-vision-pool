@@ -61,13 +61,13 @@ def show_image(image: Image):
 
 
 def main(image: Image):
-    rect = [817, 322, 1186, 325, 1364, 834, 709, 829]
+    rect = [817, 324, 1186, 329, 1364, 836, 709, 831]
     board = transform_board(image, rect)
     show_image(board)
     cv2.imwrite('cropped_board.png', board)
 
 
 if __name__ == "__main__":
-    filepath = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\downloaded_images\board_with_ron_uncropped.jpg"
+    filepath = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\downloaded_images\board_uncropped_with_stick.jpg"
     image = cv2.imread(filepath)
     main(image)
