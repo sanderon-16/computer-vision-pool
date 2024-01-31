@@ -29,12 +29,12 @@ def find_contours(board: Image, image: Image) -> List:
     gray_blank_board = cv2.cvtColor(board, cv2.COLOR_BGR2GRAY)
     diff = cv2.absdiff(gray_image, gray_blank_board)
     cv2.imwrite(r"images\diff.jpg", diff)
-    _, thresh = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)
+    _, thresh = cv2.threshold(diff, 58, 255, cv2.THRESH_BINARY)
     kernel = np.ones((8, 5), np.uint8)
     thresh = cv2.dilate(thresh, kernel, iterations=1)
     thresh = cv2.erode(thresh, kernel, iterations=1)
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 20]
+    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 50]
     return filtered_contours
 
 def find_ball_color(image: Image, ball: Ball) -> str:
@@ -44,7 +44,10 @@ def find_ball_color(image: Image, ball: Ball) -> str:
     Find the color of a ball in an image and return the color
     return: str
     """
-    pass
+    #find the dominant color in the ball
+    x, y = ball.position
+    radius = ball.radius
+
 
 
 def find_is_ball_striped(image: Image, ball: Ball) -> bool:
@@ -142,6 +145,6 @@ def main(board: Image, image: Image):
 
 
 if __name__ == "__main__":
-    board = cv2.imread(r"images\board1_no_balls.jpg")
-    image = cv2.imread(r"images\board1.jpg")
+    board = cv2.imread(r"images\blank_board1701.jpg")
+    image = cv2.imread(r"images\board_balls1701.jpg")
     main(board, image)
