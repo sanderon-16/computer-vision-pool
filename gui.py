@@ -3,6 +3,8 @@ import numpy as np
 import tkinter as tk
 from PIL import Image, ImageTk
 
+from image_processing import transform_board
+
 class RectAdjustmentApp:
     def __init__(self, image_path, rect):
         self.image = cv2.imread(image_path)
@@ -15,11 +17,26 @@ class RectAdjustmentApp:
         self.root = tk.Tk()
         self.root.title("Rectangle Adjustment")
 
-        self.canvas = tk.Canvas(self.root, width=self.image.shape[1], height=self.image.shape[0])
-        self.canvas.pack(side=tk.LEFT, padx=10, pady=10)
+        self.canvas_original = tk.Canvas(self.root, width=self.image.shape[1], height=self.image.shape[0])
+        self.canvas_original.pack(side=tk.LEFT, padx=10, pady=10)
+
+        # Label to display rectangle parameters
+        self.label_var = tk.StringVar()
+        self.label_var.set(f"Rectangle Parameters: {self.rect}")
+        self.label = tk.Label(self.root, textvariable=self.label_var)
+        self.label.pack(side=tk.TOP, pady=10)
+
+        # Calculate maximum image size based on 2/5 of the window size
+        max_width = int(self.root.winfo_screenwidth() * 2 / 5)
+        max_height = int(self.root.winfo_screenheight() * 4 / 5)
+
+        # Determine the scaling factor
+        scale_factor_width = max_width / self.image.shape[1]
+        scale_factor_height = max_height / self.image.shape[0]
+        self.scale_factor = min(scale_factor_width, scale_factor_height)
 
         # Bind mouse click event to canvas
-        self.canvas.bind("<Button-1>", self.on_canvas_click)
+        self.canvas_original.bind("<Button-1>", self.on_canvas_click)
 
         # Bind arrow key events to canvas
         self.root.bind("<Left>", self.on_left_arrow)
@@ -27,26 +44,38 @@ class RectAdjustmentApp:
         self.root.bind("<Up>", self.on_up_arrow)
         self.root.bind("<Down>", self.on_down_arrow)
 
+        # Create a button for applying transformation
+        self.transform_button = tk.Button(self.root, text="Transform Image", command=self.transform_and_display)
+        self.transform_button.pack(side=tk.TOP, pady=10)
+
+        # Create a canvas for displaying the transformed image
+        self.canvas_transformed = tk.Canvas(self.root, width=max_width, height=max_height)
+        self.canvas_transformed.pack(side=tk.LEFT, padx=10, pady=10)
+
         # Call the draw_rect function periodically
         self.draw_rect()
 
     def draw_rect(self):
-        # Draw the image on the canvas
+        # Draw the original image on the original canvas
         image_rgb = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
-        scale_factor = 0.7
+        scale_factor = self.scale_factor
         small_height = int(image_rgb.shape[0] * scale_factor)
         small_width = int(image_rgb.shape[1] * scale_factor)
         image_small = cv2.resize(image_rgb, (small_width, small_height))
 
         img_tk = ImageTk.PhotoImage(image=Image.fromarray(image_small))
-        self.canvas.create_image(0, 0, anchor=tk.NW, image=img_tk)
-        self.canvas.image = img_tk
+        self.canvas_original.create_image(0, 0, anchor=tk.NW, image=img_tk)
+        self.canvas_original.image = img_tk
 
-        # Draw the rectangle on the canvas
-        self.canvas.create_polygon(self.rect[0], self.rect[1], self.rect[2], self.rect[3], self.rect[4], self.rect[5], self.rect[6], self.rect[7], outline="red", fill="")
+        # Draw the rectangle on the original canvas
+        self.canvas_original.create_polygon(self.rect[0], self.rect[1], self.rect[2], self.rect[3],
+                                            self.rect[4], self.rect[5], self.rect[6], self.rect[7], outline="red", fill="")
 
         # Update the Tkinter window
         self.root.update()
+
+        # Update the label with the current rectangle parameters
+        self.label_var.set(f"Rectangle Parameters: {self.rect}")
 
         # Call the draw_rect function again after a delay (in milliseconds)
         self.root.after(100, self.draw_rect)
@@ -65,6 +94,7 @@ class RectAdjustmentApp:
 
         # Select the corner with the smallest distance
         self.selected_corner = selected_corner
+
     def on_left_arrow(self, event):
         self.adjust_selected_corner(-1, 0)
 
@@ -77,18 +107,40 @@ class RectAdjustmentApp:
     def on_down_arrow(self, event):
         self.adjust_selected_corner(0, 1)
 
+
     def adjust_selected_corner(self, delta_x, delta_y):
         if self.selected_corner is not None:
             self.rect[self.selected_corner] += delta_x
             self.rect[self.selected_corner + 1] += delta_y
 
+            # Update the label with the new rectangle parameters
+            self.label_var.set(f"Rectangle Parameters: {self.rect}")
+
+
+    def transform_and_display(self):
+        # Transform the image using the specified rectangle
+        actual_rect = [int(x / self.scale_factor) for x in self.rect]
+        transformed_image = transform_board(self.image, actual_rect)
+        # Display the transformed image on the canvas
+
+        image_rgb = cv2.cvtColor(transformed_image, cv2.COLOR_BGR2RGB)
+        scale_factor = self.scale_factor
+        small_height = int(image_rgb.shape[0] * scale_factor)
+        small_width = int(image_rgb.shape[1] * scale_factor)
+        image_small = cv2.resize(image_rgb, (small_width, small_height))
+
+        img_tk_transformed = ImageTk.PhotoImage(image=Image.fromarray(image_small))
+        self.canvas_transformed.create_image(0, 0, anchor=tk.NW, image=img_tk_transformed)
+        self.canvas_transformed.image = img_tk_transformed
+
 # Example usage:
 # Replace "your_image.jpg" with the path to your actual image file
-image_path = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\uncropped_images\board1_uncropped.jpg"
-initial_rect = [50, 50, 250, 50, 250, 200, 50, 200]  # Initial rectangle coordinates
+if __name__ == '__main__':
+    image_path = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\uncropped_images\board1_uncropped.jpg"
+    initial_rect = [100, 100, 500, 100, 500, 600, 100, 600]  # Initial rectangle coordinates
 
-try:
-    app = RectAdjustmentApp(image_path, initial_rect)
-    app.root.mainloop()
-except ValueError as e:
-    print(f"Error: {e}")
+    try:
+        app = RectAdjustmentApp(image_path, initial_rect)
+        app.root.mainloop()
+    except ValueError as e:
+        print(f"Error: {e}")
