@@ -53,7 +53,7 @@ def generate_projection(image_to_project: Image, rect) -> Image:
          [0, image_to_project.shape[0]]])
 
     # Define the target rectangle (coordinates of the four corners)
-    target_pts = np.float32([[0, 0], [target_width, 0], [target_width, target_height], [0, target_height]])
+    # target_pts = np.float32([[0, 0], [target_width, 0], [target_width, target_height], [0, target_height]])
 
     # Compute the perspective transformation matrix
     matrix = cv2.getPerspectiveTransform(src_pts, np.float32([[x1, y1], [x2, y2], [x3, y3], [x4, y4]]))
@@ -97,6 +97,6 @@ def main(image: Image):
 
 
 if __name__ == "__main__":
-    filepath = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\output_images\cropped_board.png"
+    filepath = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\uncropped_images\WIN_20240207_10_49_13_Pro.jpg"
     image = cv2.imread(filepath)
     main(image)
