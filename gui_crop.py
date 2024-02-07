@@ -6,7 +6,6 @@ from PIL import Image, ImageTk
 import os
 from image_processing import transform_board
 
-
 current_rec = None
 
 class RectAdjustmentApp:
