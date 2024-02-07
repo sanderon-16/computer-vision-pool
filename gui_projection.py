@@ -63,9 +63,6 @@ class RectAdjustmentApp:
         self.load_button = tk.Button(self.root, text="Load New Image", command=self.load_new_image)
         self.load_button.pack(side=tk.TOP, pady=10)
 
-        # Call the draw_rect function periodically
-        self.draw_rect()
-
         # Create a canvas for displaying the live webcam feed
         self.canvas_webcam = tk.Canvas(self.root, width=max_width, height=max_height)
         self.canvas_webcam.pack(side=tk.RIGHT, padx=10, pady=10)
@@ -73,9 +70,35 @@ class RectAdjustmentApp:
         # Initialize webcam
         self.cap = cv2.VideoCapture(1)  # TODO make webcam 0 work
 
+        # # Create a window for displaying the cropped image
+        self.cropped_image_window = tk.Toplevel(self.root)
+        self.initialize_cropped_image_window()
+
         # Call the draw_rect and update_webcam functions periodically
         self.draw_rect()
         self.update_webcam()
+
+    def initialize_cropped_image_window(self):
+        # Set the window attributes
+        self.cropped_image_window.attributes('-borderless', True)
+        # self.cropped_image_window.attributes('-fullscreen', True)  # Set to fullscreen
+        # self.cropped_image_window.attributes('-topmost', True)  # Bring to front
+        # self.cropped_image_window.attributes('-alpha', 0.7)  # Set transparency (adjust as needed)
+
+        # Get screen dimensions
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        # Set initial position for the second screen (adjust as needed)
+        second_screen_x = screen_width  # X-coordinate for the second screen
+        second_screen_y = 0  # Y-coordinate for the second screen
+
+        # Set the initial position of the window
+        self.cropped_image_window.geometry(f"+{second_screen_x}+{second_screen_y}")
+
+        # Create a canvas for displaying the cropped image
+        self.cropped_image_canvas = tk.Canvas(self.cropped_image_window)
+        self.cropped_image_canvas.pack(fill=tk.BOTH, expand=tk.YES)
 
     def draw_rect(self):
         # Draw the original image on the original canvas
@@ -84,11 +107,17 @@ class RectAdjustmentApp:
         self.root.update()
 
         # Update the label with the current rectangle parameters
-        self.label_var.set(f"Rectangle Parameters: {[int(x/self.scale_factor) for x in self.rect]}")
+        self.label_var.set(f"Rectangle Parameters: {[int(x / self.scale_factor) for x in self.rect]}")
+
+        # Display the cropped_image in the borderless and fullscreen window
+        if self.cropped_image is not None:
+            cropped_image_rgb = cv2.cvtColor(self.cropped_image, cv2.COLOR_BGR2RGB)
+            img_tk_cropped = ImageTk.PhotoImage(image=Image.fromarray(cropped_image_rgb))
+            self.cropped_image_canvas.create_image(0, 0, anchor=tk.NW, image=img_tk_cropped)
+            self.cropped_image_canvas.image = img_tk_cropped
 
         # Call the draw_rect function again after a delay (in milliseconds)
         self.root.after(100, self.draw_rect)
-
     def on_canvas_click(self, event):
         min_distance = float('inf')
         selected_corner = None
@@ -188,23 +217,6 @@ if __name__ == '__main__':
     image_path = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\uncropped_images\board1_uncropped.jpg"
     initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]] # Initial rectangle coordinates
 
-    cv2.namedWindow("preview")
-    vc = cv2.VideoCapture(1)
-
-    if vc.isOpened():  # try to get the first frame
-        rval, frame = vc.read()
-    else:
-        rval = False
-
-    while rval:
-        cv2.imshow("preview", frame)
-        rval, frame = vc.read()
-        key = cv2.waitKey(20)
-        if key == 27:  # exit on ESC
-            break
-
-    vc.release()
-    cv2.destroyWindow("preview")
     try:
 
         app = RectAdjustmentApp(image_path, initial_rect)
