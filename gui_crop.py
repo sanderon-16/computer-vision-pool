@@ -1,13 +1,16 @@
 import cv2
 import numpy as np
 import tkinter as tk
+from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
-
+import os
 from image_processing import transform_board
 
 class RectAdjustmentApp:
     def __init__(self, image_path, rect):
         self.image = cv2.imread(image_path)
+        self.cropped_image = None
+
         if self.image is None:
             raise ValueError(f"Error loading image from path: {image_path}")
 
@@ -17,8 +20,19 @@ class RectAdjustmentApp:
         self.root = tk.Tk()
         self.root.title("Rectangle Adjustment")
 
+        # Lock GUI size to the size of the screen
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        self.root.geometry(f"{screen_width}x{screen_height}")
+
         self.canvas_original = tk.Canvas(self.root, width=self.image.shape[1], height=self.image.shape[0])
         self.canvas_original.pack(side=tk.LEFT, padx=10, pady=10)
+
+        self.entry_vars = [tk.StringVar() for _ in range(8)]
+        for i in range(8):
+            entry = ttk.Entry(self.root, textvariable=self.entry_vars[i], width=6)
+            entry.insert(0, str(self.rect[i]))
+            entry.pack()
 
         # Label to display rectangle parameters
         self.label_var = tk.StringVar()
@@ -48,9 +62,20 @@ class RectAdjustmentApp:
         self.transform_button = tk.Button(self.root, text="Transform Image", command=self.transform_and_display)
         self.transform_button.pack(side=tk.TOP, pady=10)
 
+        # Create a button for saving the image
+        self.save_button = tk.Button(self.root, text="Save Image", command=self.save_image)
+        self.save_button.pack(side=tk.TOP, pady=10)
+
+        # Create a button for loading a new image
+        self.load_button = tk.Button(self.root, text="Load New Image", command=self.load_new_image)
+        self.load_button.pack(side=tk.TOP, pady=10)
+
         # Create a canvas for displaying the transformed image
         self.canvas_transformed = tk.Canvas(self.root, width=max_width, height=max_height)
         self.canvas_transformed.pack(side=tk.LEFT, padx=10, pady=10)
+
+        # Initialize counter for saved images
+        self.counter = 1
 
         # Call the draw_rect function periodically
         self.draw_rect()
@@ -97,16 +122,19 @@ class RectAdjustmentApp:
 
     def on_left_arrow(self, event):
         self.adjust_selected_corner(-1, 0)
+        self.transform_and_display()
 
     def on_right_arrow(self, event):
         self.adjust_selected_corner(1, 0)
+        self.transform_and_display()
 
     def on_up_arrow(self, event):
         self.adjust_selected_corner(0, -1)
+        self.transform_and_display()
 
     def on_down_arrow(self, event):
         self.adjust_selected_corner(0, 1)
-
+        self.transform_and_display()
 
     def adjust_selected_corner(self, delta_x, delta_y):
         if self.selected_corner is not None:
@@ -115,7 +143,6 @@ class RectAdjustmentApp:
 
             # Update the label with the new rectangle parameters
             self.label_var.set(f"Rectangle Parameters: {self.rect}")
-
 
     def transform_and_display(self):
         # Transform the image using the specified rectangle
@@ -132,6 +159,37 @@ class RectAdjustmentApp:
         img_tk_transformed = ImageTk.PhotoImage(image=Image.fromarray(image_small))
         self.canvas_transformed.create_image(0, 0, anchor=tk.NW, image=img_tk_transformed)
         self.canvas_transformed.image = img_tk_transformed
+        self.cropped_image = transformed_image
+
+    def save_image(self):
+        base_directory = os.getcwd()  # Get the current working directory
+        output_subdirectory = "output_images"  # Subdirectory for saving images
+
+        # Create the output directory if it doesn't exist
+        output_directory = os.path.join(base_directory, output_subdirectory)
+        os.makedirs(output_directory, exist_ok=True)
+
+        # Save the image with a unique name based on the counter
+        image_name = f'cropped_board_{self.counter}.png'
+        image_path = os.path.join(output_directory, image_name)
+        cv2.imwrite(image_path, self.cropped_image)
+
+        # Increment the counter
+        self.counter += 1
+
+    def load_new_image(self):
+        file_path = filedialog.askopenfilename(title="Select Image File", filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
+        if file_path:
+            self.image = cv2.imread(file_path)
+            if self.image is None:
+                raise ValueError(f"Error loading image from path: {file_path}")
+
+            self.rect = [50, 50, 250, 50, 250, 200, 50, 200]  # Reset rectangle coordinates
+            self.selected_corner = None
+
+            # Update the label with the new rectangle parameters
+            self.label_var.set(f"Rectangle Parameters: {self.rect}")
+
 
 # Example usage:
 # Replace "your_image.jpg" with the path to your actual image file
