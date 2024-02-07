@@ -7,7 +7,7 @@ Image = Union[Mat, np.ndarray]
 
 
 class Ball:
-    def __init__(self, position: Tuple[float, float], color: str, striped: bool):
+    def __init__(self, position: Tuple[int, int], color: str, striped: bool):
         self.position = position
         self.striped = striped  # True if striped, False if solid
         self.color = color

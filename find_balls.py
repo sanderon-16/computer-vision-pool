@@ -8,18 +8,27 @@ Image = Union[Mat, np.ndarray]
 
 
 
-def find_balls(image: Image) -> List[Ball]:
+def find_balls(image: Image) -> List[Tuple[int]]:
     """
     param1: image
     Find all the balls in an image and return a list of Ball objects
     return: List[Ball]
     """
+    cut_and_resized_image = cut_and_resize(image)
+    cut_and_resized_image, rgb, hsv, bilateral_color, gray = images_formats(cut_and_resized_image)
+    edges = cv2.Canny(bilateral_color, 200, 100)
+    contours = line_detected(edges)
+    drawn_centers, original_image_with_mark = find_ellipses(bilateral_color, contours, edges, image.copy())
+    cv2.imshow("original_image_with_mark", original_image_with_mark)
+    cv2.imshow("edges", edges)
+    cv2.waitKey(0)
 
+def cut_and_resize(image: Image) -> Image:
     # resize the image to 75%
     scale_percent = 75
     width = int(image.shape[1] * scale_percent / 100)
     height = int(image.shape[0] * scale_percent / 100)
-    #change the image
+    # change the image
     image = cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
 
     image_without_frame = image.copy()
@@ -29,26 +38,23 @@ def find_balls(image: Image) -> List[Ball]:
     image_without_frame[-thickness:, :] = 0  # Bottom
     image_without_frame[:, :thickness] = 0  # Left
     image_without_frame[:, -thickness:] = 0  # Right
+    return image_without_frame
 
-
-
+def images_formats(image: Image) -> Tuple[Image]:
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    bilateral_color = cv2.bilateralFilter(image_without_frame, 9, 75, 75)
-
+    bilateral_color = cv2.bilateralFilter(image, 9, 75, 75)
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     gray = cv2.cvtColor(bilateral_color, cv2.COLOR_BGR2GRAY)
+    return image, rgb, hsv, bilateral_color, gray
 
-    # dilation and erosion
-    kernel = np.ones((3,3), np.uint8)
-    dilate_gray = cv2.dilate(gray, kernel, iterations=1)
-    kernel = np.ones((3,3), np.uint8)
-    erode_gray = cv2.erode(dilate_gray, kernel, iterations=1)
-
-    #canny and find contours
-    edges = cv2.Canny(bilateral_color, 200, 100)
+def dilation_and_erosion(image: Image) -> Image:
+    kernel = np.ones((5,5), np.uint8)
+    dilation = cv2.dilate(image, kernel, iterations=1)
+    erosion = cv2.erode(dilation, kernel, iterations=1)
+    return erosion
 
 
-
+def line_detected(edges) -> Image:
     # Parameters for line detection
     rho = 1  # Distance resolution in pixels
     theta = np.pi / 180  # Angular resolution in radians
@@ -57,22 +63,19 @@ def find_balls(image: Image) -> List[Ball]:
     max_line_gap = 10  # Maximum gap in pixels between connectable line segments
 
     # Detect lines in the image
-    lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]), minLineLength=min_line_length, maxLineGap=max_line_gap)
+    lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]), minLineLength=min_line_length,
+                            maxLineGap=max_line_gap)
 
     # Erase the detected lines
     if lines is not None:
         for line in lines:
             for x1, y1, x2, y2 in line:
                 cv2.line(edges, (x1, y1), (x2, y2), (0, 0, 0), 3)  # Drawing a black line over the detected line
-
-
-    image_with_points = image_without_frame.copy()
-
-    kernel = np.ones((5,5), np.uint8)
-    #edges = cv2.dilate(edges, kernel, iterations=1)
-
     contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    return contours
 
+
+def find_ellipses(image: Image, contours, edges, original_image) -> Union[Image, List[Tuple[int]]]:
     min_major_axis = 5 # Minimum length of the major axis
     max_major_axis = 1000  # Maximum length of the major axis
     min_minor_axis = 20  # Minimum length of the minor axis
@@ -97,14 +100,9 @@ def find_balls(image: Image) -> List[Ball]:
                 if not too_close:
                     drawn_centers.append(center)
                     # Draw the red point
-                    cv2.circle(image_with_points, center, 2, (0, 0, 255), -1)
+                    cv2.circle(original_image, center, 2, (0, 0, 255), -1)
 
-    cv2.imshow('image', image)
-    cv2.imshow('image_without_frame', image_with_points)
-    cv2.imshow('edges', edges)
-    cv2.waitKey(0)
+    return drawn_centers, original_image
 
-
-
-image = cv2.imread("images/board_balls1701.jpg")
+image = cv2.imread("images/board2.jpg")
 find_balls(image)
