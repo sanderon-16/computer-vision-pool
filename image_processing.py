@@ -23,6 +23,7 @@ class Board:
     height: int
 
 def find_board():
+    # finds board
     return Board(112, 224)
 
 def transform_board(image: Image, rect) -> Image:
