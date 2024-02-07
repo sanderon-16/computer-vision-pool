@@ -8,11 +8,17 @@ Image = Union[Mat, np.ndarray]
 
 
 class Ball:
-    def __init__(self, position: Tuple[float, float], color: str, striped: bool):
+    def __init__(self, position: Tuple[int, int], color: str, striped: bool):
         self.position = position
         self.striped = striped  # True if striped, False if solid
         self.color = color
         self.pocketed = False
+
+class Board:
+    width = 112*4
+    height = 224*4
+    def __init(self, balls: List[Ball]):
+        self.balls = balls
 
 
 def transform_board(image: Image, rect) -> Image:
@@ -20,8 +26,8 @@ def transform_board(image: Image, rect) -> Image:
     x1, y1, x2, y2, x3, y3, x4, y4 = rect
 
     # Set the target size for the new image
-    target_width = 112 * 4
-    target_height = 224 * 4
+    target_width = Board.width
+    target_height = Board.height
 
     # Define the new coordinates of the corners in the new image
     new_rect = np.array([[0, 0], [target_width, 0], [target_width, target_height], [0, target_height]], dtype=np.float32)

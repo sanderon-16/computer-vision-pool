@@ -28,12 +28,6 @@ class RectAdjustmentApp:
         self.canvas_original = tk.Canvas(self.root, width=self.image.shape[1], height=self.image.shape[0])
         self.canvas_original.pack(side=tk.LEFT, padx=10, pady=10)
 
-        self.entry_vars = [tk.StringVar() for _ in range(8)]
-        for i in range(8):
-            entry = ttk.Entry(self.root, textvariable=self.entry_vars[i], width=6)
-            entry.insert(0, str(self.rect[i]))
-            entry.pack()
-
         # Label to display rectangle parameters
         self.label_var = tk.StringVar()
         self.label_var.set(f"Rectangle Parameters: {self.rect}")
@@ -184,7 +178,7 @@ class RectAdjustmentApp:
             if self.image is None:
                 raise ValueError(f"Error loading image from path: {file_path}")
 
-            self.rect = [50, 50, 250, 50, 250, 200, 50, 200]  # Reset rectangle coordinates
+            self.rect = [int(self.scale_factor*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]]  # Reset rectangle coordinates
             self.selected_corner = None
 
             # Update the label with the new rectangle parameters
@@ -195,7 +189,7 @@ class RectAdjustmentApp:
 # Replace "your_image.jpg" with the path to your actual image file
 if __name__ == '__main__':
     image_path = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\uncropped_images\board1_uncropped.jpg"
-    initial_rect = [100, 100, 500, 100, 500, 600, 100, 600]  # Initial rectangle coordinates
+    initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]] # Initial rectangle coordinates
 
     try:
         app = RectAdjustmentApp(image_path, initial_rect)
