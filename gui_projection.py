@@ -80,8 +80,7 @@ class RectAdjustmentApp:
 
     def initialize_cropped_image_window(self):
         # Set the window attributes
-        self.cropped_image_window.attributes('-borderless', True)
-        # self.cropped_image_window.attributes('-fullscreen', True)  # Set to fullscreen
+        self.cropped_image_window.attributes('-fullscreen', True)  # Set to fullscreen
         # self.cropped_image_window.attributes('-topmost', True)  # Bring to front
         # self.cropped_image_window.attributes('-alpha', 0.7)  # Set transparency (adjust as needed)
 
@@ -118,6 +117,7 @@ class RectAdjustmentApp:
 
         # Call the draw_rect function again after a delay (in milliseconds)
         self.root.after(100, self.draw_rect)
+
     def on_canvas_click(self, event):
         min_distance = float('inf')
         selected_corner = None
@@ -218,7 +218,6 @@ if __name__ == '__main__':
     initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]] # Initial rectangle coordinates
 
     try:
-
         app = RectAdjustmentApp(image_path, initial_rect)
         app.root.mainloop()
     except ValueError as e:
