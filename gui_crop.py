@@ -6,13 +6,12 @@ from PIL import Image, ImageTk
 import os
 from image_processing import transform_board
 
-class RectAdjustmentApp:
-    def __init__(self, image_path, rect):
-        self.image = cv2.imread(image_path)
-        self.cropped_image = None
+current_rec = None
 
-        if self.image is None:
-            raise ValueError(f"Error loading image from path: {image_path}")
+class RectAdjustmentApp:
+    def __init__(self, image, rect):
+        self.image = image
+        self.cropped_image = None
 
         self.rect = rect
         self.selected_corner = None
@@ -57,7 +56,7 @@ class RectAdjustmentApp:
         self.transform_button.pack(side=tk.TOP, pady=10)
 
         # Create a button for saving the image
-        self.save_button = tk.Button(self.root, text="Save Image", command=self.save_image)
+        self.save_button = tk.Button(self.root, text="Output Rect", command=self.return_rect)
         self.save_button.pack(side=tk.TOP, pady=10)
 
         # Create a button for loading a new image
@@ -155,21 +154,11 @@ class RectAdjustmentApp:
         self.canvas_transformed.image = img_tk_transformed
         self.cropped_image = transformed_image
 
-    def save_image(self):
-        base_directory = os.getcwd()  # Get the current working directory
-        output_subdirectory = "output_images"  # Subdirectory for saving images
-
-        # Create the output directory if it doesn't exist
-        output_directory = os.path.join(base_directory, output_subdirectory)
-        os.makedirs(output_directory, exist_ok=True)
-
-        # Save the image with a unique name based on the counter
-        image_name = f'cropped_board_{self.counter}.png'
-        image_path = os.path.join(output_directory, image_name)
-        cv2.imwrite(image_path, self.cropped_image)
-
-        # Increment the counter
-        self.counter += 1
+    def return_rect(self):
+        global current_rec
+        actual_rect = [int(x / self.scale_factor) for x in self.rect]
+        current_rec = actual_rect
+        self.root.destroy()
 
     def load_new_image(self):
         file_path = filedialog.askopenfilename(title="Select Image File", filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
@@ -189,10 +178,11 @@ class RectAdjustmentApp:
 # Replace "your_image.jpg" with the path to your actual image file
 if __name__ == '__main__':
     image_path = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\uncropped_images\board1_uncropped.jpg"
-    initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]] # Initial rectangle coordinates
-
+    initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]]  # Initial rectangle coordinates
+    image_in = cv2.imread(image_path)
     try:
-        app = RectAdjustmentApp(image_path, initial_rect)
+        app = RectAdjustmentApp(image_in, initial_rect)
         app.root.mainloop()
+        print(current_rec)
     except ValueError as e:
         print(f"Error: {e}")
