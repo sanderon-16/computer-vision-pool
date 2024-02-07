@@ -188,7 +188,7 @@ class RectAdjustmentApp:
 # Example usage:
 # Replace "your_image.jpg" with the path to your actual image file
 if __name__ == '__main__':
-    image_path = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\uncropped_images\board1_uncropped.jpg"
+    image_path = (r"uncropped_images\image1.jpg")
     initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]] # Initial rectangle coordinates
 
     try:

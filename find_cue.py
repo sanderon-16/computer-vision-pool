@@ -1,4 +1,3 @@
-from main import Ball
 import cv2
 import numpy as np
 from cv2 import Mat
@@ -87,5 +86,5 @@ def return_cue_parameters(gray_image: Image, line: List[Tuple[int]], white_ball_
 
 
 white_ball_coordinate = (500,250)
-image = cv2.imread("images/board_stick_balls1701.jpg")
+image = cv2.imread("images\photo_from_camera.jpg")
 find_cue(image, white_ball_coordinate)

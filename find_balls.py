@@ -16,12 +16,20 @@ def find_balls(image: Image) -> List[Tuple[int]]:
     """
     cut_and_resized_image = cut_and_resize(image)
     cut_and_resized_image, rgb, hsv, bilateral_color, gray = images_formats(cut_and_resized_image)
-    edges = cv2.Canny(bilateral_color, 200, 100)
-    contours = line_detected(edges)
-    drawn_centers, original_image_with_mark = find_ellipses(bilateral_color, contours, edges, image.copy())
-    cv2.imshow("original_image_with_mark", original_image_with_mark)
+    yiq = bgr_to_yiq(bilateral_color)
+
+    edges = cv2.Canny(gray, 200, 100)
+
     cv2.imshow("edges", edges)
+    cv2.imshow("yiq", yiq)
+    cv2.imshow("original", image)
     cv2.waitKey(0)
+
+
+    without_lines = find_lines_and_remove(edges)
+    #contours = line_detected(edges)
+    #drawn_centers, original_image_with_mark = find_ellipses(bilateral_color, contours, edges, image.copy())
+
 
 def cut_and_resize(image: Image) -> Image:
     # resize the image to 75%
@@ -104,5 +112,52 @@ def find_ellipses(image: Image, contours, edges, original_image) -> Union[Image,
 
     return drawn_centers, original_image
 
-image = cv2.imread("images/board2.jpg")
+
+
+def find_lines_and_remove(edges) -> List[Tuple[int]]:
+    """
+    :param image: Image
+    :return: List of tuples containing the coordinates of the lines
+    """
+    rho = 1  # distance resolution in pixels of the Hough grid
+    theta = np.pi / 180  # angular resolution in radians of the Hough grid
+    threshold = 15  # minimum number of votes (intersections in Hough grid cell)
+    min_line_length = 15  # minimum number of pixels making up a line
+    max_line_gap = 20  # maximum gap in pixels between connectable line segments
+    # creating a blank to draw lines on
+    line_image = np.copy(edges) * 0  # creating a blank to draw lines on
+    lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
+                            min_line_length, max_line_gap)
+    for line in lines:
+        for x1, y1, x2, y2 in line:
+            cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
+
+    #reduce the only line image from the edges
+    without_lines = cv2.subtract(edges, line_image)
+    return without_lines
+
+def bgr_to_yiq(bgr_image):
+    # Convert BGR to RGB
+    rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+
+    # Transformation matrix for RGB to YIQ
+    transform_matrix = np.array([[0.299, 0.587, 0.114],
+                                 [0.596, -0.274, -0.322],
+                                 [0.211, -0.523, 0.312]])
+
+    # Apply the transformation matrix to each pixel
+    yiq_image = np.dot(rgb_image, transform_matrix.T)
+    yiq_image = np.clip(yiq_image, 0, 255)  # Ensure the values are within byte range
+
+    return yiq_image
+
+def yiq_to_gray(yiq_image):
+    # Extract the Y channel (luminance)
+    y_channel = yiq_image[:, :, 0]
+
+    # Convert the Y channel to grayscale
+    gray_image = cv2.cvtColor(y_channel, cv2.COLOR_GRAY2BGR)
+    return gray_image
+
+image = cv2.imread("images\photo_from_camera.jpg")
 find_balls(image)
