@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import cv2
 import numpy as np
 from typing import Union, Tuple, List
@@ -14,20 +16,22 @@ class Ball:
         self.color = color
         self.pocketed = False
 
-class Board:
-    width = 112*4
-    height = 224*4
-    def __init(self, balls: List[Ball]):
-        self.balls = balls
 
+@dataclass
+class Board:
+    width: int
+    height: int
+
+def find_board():
+    return Board(112, 224)
 
 def transform_board(image: Image, rect) -> Image:
     # Get the coordinates of the corners of the board
     x1, y1, x2, y2, x3, y3, x4, y4 = rect
 
     # Set the target size for the new image
-    target_width = Board.width
-    target_height = Board.height
+    target_width = 112*4
+    target_height = 224*4
 
     # Define the new coordinates of the corners in the new image
     new_rect = np.array([[0, 0], [target_width, 0], [target_width, target_height], [0, target_height]], dtype=np.float32)
