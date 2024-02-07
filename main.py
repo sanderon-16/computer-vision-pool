@@ -103,48 +103,33 @@ def show_image(image: Image):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+    # Apply thresholding to find the regions with balls
+    _, thresholded_diff = cv2.threshold(diff_img, 37, 255, cv2.THRESH_BINARY)
 
-def find_white_ball(image: Image, balls: List[Ball]) -> Ball:
-    """
-    param1: image
-    param2: balls
-    Find the white ball in an image and return the white ball
-    return: Ball
-    """
-    white_ball = None
-    max_white_value = -1  # To track the maximum intensity value of white found
-    for ball in balls:
-        x, y = ball.position
-        radius = ball.radius
-        roi = image[y - radius:y + radius, x - radius:x + radius]
-        if roi.size == 0 or roi.shape[0] < radius * 2 or roi.shape[1] < radius * 2:
-            continue
-        roi_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-        avg_intensity = np.mean(roi_hsv[:, :, 2])
-        if avg_intensity > max_white_value:
-            max_white_value = avg_intensity
-            white_ball = ball
+    # Find contours in the thresholded image
+    contours, _ = cv2.findContours(thresholded_diff, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    if white_ball is not None:
-        x, y = white_ball.position
-        radius = white_ball.radius
-        cv2.circle(image, (x, y), radius, (0, 0, 255), 2)  # Red circle
-        cv2.putText(image, 'Cue Ball', (x - radius, y - radius - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-    return white_ball
+    # Initialize a list to store ball positions
+    ball_positions = []
 
+    # Draw circles around the detected balls on the original image
+    result_img = table_with_balls_img.copy()
+    for contour in contours:
+        if cv2.contourArea(contour) > 100:  # You may need to adjust this threshold
+            (x, y, w, h) = cv2.boundingRect(contour)
+            center = (x + w // 2, y + h // 2)
+            radius = max(w, h) // 2
+            cv2.circle(result_img, center, radius, (0, 0, 255), 2)  # Red circle
 
-def main(board: Image, image: Image):
-    balls = find_balls(board, image)
-    for ball in balls:
-        print(ball.position)
-    white_ball = find_white_ball(image, balls)
-    print("White ball position:", end=" ")
-    print(white_ball.position)
-    show_image(image)
+            # Store the center coordinates of the detected ball as a tuple (x, y)
+            ball_positions.append((center[0], center[1]))
 
+    # Save or display the resulting image
+    cv2.imwrite(output_img_path, result_img)
 
+    # Return the list of ball positions
+    return ball_positions
 
-if __name__ == "__main__":
-    board = cv2.imread(r"images\board1.jpg")
-    image = cv2.imread(r"images\board_balls1701.jpg")
-    main(board, image)
+# Example usage:
+ball_positions = find_balls("blank_table.jpg", "pool_table_with_balls.jpg", "marked_table.jpg")
+print("List of Ball Positions:", ball_positions)
