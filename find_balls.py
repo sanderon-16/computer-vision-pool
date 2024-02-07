@@ -17,18 +17,45 @@ def find_balls(image: Image) -> List[Tuple[int]]:
     cut_and_resized_image = cut_and_resize(image)
     cut_and_resized_image, rgb, hsv, bilateral_color, gray = images_formats(cut_and_resized_image)
     yiq = bgr_to_yiq(bilateral_color)
+    yiq_gray = yiq[:,:,1]
+    edges_gray = cv2.Canny((gray), 200, 100)
+    edges_yiq = cv2.Canny(yiq_gray.astype(np.uint8), 50, 50)
+    edges = cv2.add(edges_gray, edges_yiq)
+    kernal = np.ones((5,5), np.uint8)
+    dilation = cv2.dilate(edges, kernal, iterations=1)
+    without_linear_lines = find_lines_and_remove(dilation)
+    contours = line_detected(dilation)
+    centers, original_image_with_balls = find_ball_on_edges_image(without_linear_lines, bilateral_color, contours)
+    return centers
 
-    edges = cv2.Canny(gray, 200, 100)
+def find_ball_on_edges_image(gray_image: Image, original_image: Image, contours: List[Tuple[int]]):
+    """
+    this function find parts that are white in radius and return a list with the centers and mark
+    the cemters on the original image
+    :param image:
+    :param original_image:
+    :param contours:
+    :return:
+    """
+    # find the centers of the contours
+    centers = []
+    for contour in contours:
+        (x, y), radius = cv2.minEnclosingCircle(contour)
+        center = (int(x), int(y))
+        add_center = True
+        radius = int(radius)
+        if radius > 10 or radius<5:
+            continue
+        for center_2 in centers:
+            if abs(center_2[0] - center[0]) < 20 and abs(center_2[1] - center[1]) < 20:
+                add_center = False
+        if not add_center:
+            continue
+        centers.append(center)
+        cv2.circle(original_image, center, radius, (0, 255, 0), 2)
 
-    cv2.imshow("edges", edges)
-    cv2.imshow("yiq", yiq)
-    cv2.imshow("original", image)
-    cv2.waitKey(0)
+    return centers, original_image
 
-
-    without_lines = find_lines_and_remove(edges)
-    #contours = line_detected(edges)
-    #drawn_centers, original_image_with_mark = find_ellipses(bilateral_color, contours, edges, image.copy())
 
 
 def cut_and_resize(image: Image) -> Image:
@@ -40,12 +67,12 @@ def cut_and_resize(image: Image) -> Image:
     image = cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
 
     image_without_frame = image.copy()
-    thickness = 13
-    # Black out the top, bottom, left, and right parts
-    image_without_frame[:thickness, :] = 0  # Top
-    image_without_frame[-thickness:, :] = 0  # Bottom
-    image_without_frame[:, :thickness] = 0  # Left
-    image_without_frame[:, -thickness:] = 0  # Right
+    # thickness = 30
+    # # Black out the top, bottom, left, and right parts
+    # image_without_frame[:thickness, :] = 0  # Top
+    # image_without_frame[-thickness:, :] = 0  # Bottom
+    # image_without_frame[:, :thickness] = 0  # Left
+    # image_without_frame[:, -thickness:] = 0  # Right
     return image_without_frame
 
 def images_formats(image: Image) -> Tuple[Image]:
@@ -83,35 +110,6 @@ def line_detected(edges) -> Image:
     return contours
 
 
-def find_ellipses(image: Image, contours, edges, original_image) -> Union[Image, List[Tuple[int]]]:
-    min_major_axis = 5 # Minimum length of the major axis
-    max_major_axis = 1000  # Maximum length of the major axis
-    min_minor_axis = 20  # Minimum length of the minor axis
-    max_minor_axis = 50  # Maximum length of the minor axis
-
-    min_distance = 20  # Example value, adjust as needed
-
-    # Store the centers that have been drawn
-    drawn_centers = []
-
-    for cnt in contours:
-        if len(cnt) >= 5:
-            ellipse = cv2.fitEllipse(cnt)
-            (x, y), (MA, ma), angle = ellipse
-
-            if min_major_axis <= MA <= max_major_axis and min_minor_axis <= ma <= max_minor_axis:
-                center = (int(x), int(y))
-
-                # Check the distance to previously drawn centers
-                too_close = any(np.linalg.norm(np.array(center) - np.array(c)) < min_distance for c in drawn_centers)
-
-                if not too_close:
-                    drawn_centers.append(center)
-                    # Draw the red point
-                    cv2.circle(original_image, center, 2, (0, 0, 255), -1)
-
-    return drawn_centers, original_image
-
 
 
 def find_lines_and_remove(edges) -> List[Tuple[int]]:
@@ -122,7 +120,7 @@ def find_lines_and_remove(edges) -> List[Tuple[int]]:
     rho = 1  # distance resolution in pixels of the Hough grid
     theta = np.pi / 180  # angular resolution in radians of the Hough grid
     threshold = 15  # minimum number of votes (intersections in Hough grid cell)
-    min_line_length = 15  # minimum number of pixels making up a line
+    min_line_length = 40  # minimum number of pixels making up a line
     max_line_gap = 20  # maximum gap in pixels between connectable line segments
     # creating a blank to draw lines on
     line_image = np.copy(edges) * 0  # creating a blank to draw lines on
@@ -151,13 +149,47 @@ def bgr_to_yiq(bgr_image):
 
     return yiq_image
 
+def bgr_to_yiq_uint8(bgr_image):
+    # Convert BGR to RGB
+    rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+
+    # Transformation matrix for RGB to YIQ
+    transform_matrix = np.array([[0.299, 0.587, 0.114],
+                                 [0.596, -0.274, -0.322],
+                                 [0.211, -0.523, 0.312]])
+
+    # Apply the transformation matrix to each pixel
+    yiq_image = np.dot(rgb_image, transform_matrix.T)
+
+    # Clip the values to ensure they are within byte range
+    yiq_image = np.clip(yiq_image, 0, 255)
+
+    # Convert the result to uint8
+    yiq_image_uint8 = np.uint8(yiq_image)
+
+    return yiq_image_uint8
+
 def yiq_to_gray(yiq_image):
     # Extract the Y channel (luminance)
     y_channel = yiq_image[:, :, 0]
 
+    # Normalize the Y channel to 0-255
+    y_channel_normalized = cv2.normalize(y_channel, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
+    # Convert the normalized Y channel to 8-bit format
+    y_channel_8bit = np.uint8(y_channel_normalized)
+
     # Convert the Y channel to grayscale
-    gray_image = cv2.cvtColor(y_channel, cv2.COLOR_GRAY2BGR)
+    gray_image = cv2.cvtColor(y_channel_8bit, cv2.COLOR_GRAY2BGR)
+
     return gray_image
 
-image = cv2.imread("images\photo_from_camera.jpg")
-find_balls(image)
+
+def create_ball_objects():
+    pass
+
+def find_cue_ball():
+    pass
+
+image = cv2.imread(r"output_images\original_image_1.png")
+centers = find_balls(image)
