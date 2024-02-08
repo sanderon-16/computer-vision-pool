@@ -30,7 +30,7 @@ class RectAdjustmentApp:
         max_height = int(self.root.winfo_screenheight() * 4 / 5)
 
         self.canvas_original = tk.Canvas(self.root, width=max_width, height=max_height)
-        self.canvas_original.pack(side=tk.LEFT ,padx=10, pady=10)
+        self.canvas_original.pack(side=tk.LEFT, padx=10, pady=10)
 
         # Label to display rectangle parameters
         self.label_var = tk.StringVar()

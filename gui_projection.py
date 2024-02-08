@@ -31,7 +31,11 @@ class RectAdjustmentAppProjection:
         screen_height = self.root.winfo_screenheight()
         self.root.geometry(f"{screen_width}x{screen_height}")
 
-        self.canvas_original = tk.Canvas(self.root, width=self.image.shape[1], height=self.image.shape[0])
+        # Calculate maximum image size based on 2/5 of the window size
+        max_width = int(self.root.winfo_screenwidth() * 3 / 5)
+        max_height = int(self.root.winfo_screenheight() * 4 / 5)
+
+        self.canvas_original = tk.Canvas(self.root, width=max_width, height=max_height)
         self.canvas_original.pack(side=tk.LEFT, padx=10, pady=10)
 
         # Label to display rectangle parameters
@@ -40,9 +44,6 @@ class RectAdjustmentAppProjection:
         self.label = tk.Label(self.root, textvariable=self.label_var)
         self.label.pack(side=tk.TOP, pady=10)
 
-        # Calculate maximum image size based on 2/5 of the window size
-        max_width = int(self.root.winfo_screenwidth() * 2 / 5)
-        max_height = int(self.root.winfo_screenheight() * 4 / 5)
 
         # Determine the scaling factor
         scale_factor_width = max_width / self.image.shape[1]
@@ -72,8 +73,8 @@ class RectAdjustmentAppProjection:
 
 
         # Create a window for displaying the cropped image (shutting this feature off for now)
-        # self.cropped_image_window = tk.Toplevel(self.root)
-        # self.initialize_cropped_image_window()
+        self.cropped_image_window = tk.Toplevel(self.root)
+        self.initialize_cropped_image_window()
 
         # Call the draw_rect and update_webcam functions periodically
         self.draw_rect()
