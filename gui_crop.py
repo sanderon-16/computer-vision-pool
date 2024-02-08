@@ -6,14 +6,13 @@ from PIL import Image, ImageTk
 import os
 from image_processing import transform_board
 
-current_rec = None
-
 class RectAdjustmentApp:
-    def __init__(self, image, rect):
+    def __init__(self, image, rect, set_rect):
         self.image = image
         self.cropped_image = None
 
         self.rect = rect
+        self.set_rect = set_rect  # function
         self.selected_corner = None
 
         self.root = tk.Tk()
@@ -155,9 +154,8 @@ class RectAdjustmentApp:
         self.cropped_image = transformed_image
 
     def return_rect(self):
-        global current_rec
         actual_rect = [int(x / self.scale_factor) for x in self.rect]
-        current_rec = actual_rect
+        self.set_rect(actual_rect)
         self.root.destroy()
 
     def load_new_image(self):
@@ -181,8 +179,12 @@ if __name__ == '__main__':
     initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]]  # Initial rectangle coordinates
     image_in = cv2.imread(image_path)
     try:
-        app = RectAdjustmentApp(image_in, initial_rect)
+        current_rec = [None]  # something mutable
+        def set_rect(cam_rect):
+            current_rec[0] = cam_rect
+        app = RectAdjustmentApp(image_in, initial_rect, set_rect)
         app.root.mainloop()
         print(current_rec)
+
     except ValueError as e:
         print(f"Error: {e}")
