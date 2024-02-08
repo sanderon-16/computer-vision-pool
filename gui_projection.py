@@ -8,8 +8,13 @@ from tkinter import filedialog
 from functools import partial
 from image_processing import generate_projection
 
-class RectAdjustmentApp:
-    def __init__(self, image_path, rect):
+
+class RectAdjustmentAppProjection:
+    def __init__(self, image_path, set_rect, rect=None):
+
+        if rect is None:
+            rect = [int(0.4 * x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]]
+
         self.image = cv2.imread(image_path)
         self.cropped_image = None
 
@@ -17,6 +22,7 @@ class RectAdjustmentApp:
             raise ValueError(f"Error loading image from path: {image_path}")
 
         self.rect = rect
+        self.set_rect = set_rect  # function
         self.selected_corner = None
         self.scale_factor = 0.5
 
@@ -67,12 +73,10 @@ class RectAdjustmentApp:
         self.canvas_webcam = tk.Canvas(self.root, width=max_width, height=max_height)
         self.canvas_webcam.pack(side=tk.RIGHT, padx=10, pady=10)
 
-        # Initialize webcam
-        self.cap = cv2.VideoCapture(1)  # TODO make webcam 0 work
 
-        # # Create a window for displaying the cropped image
-        self.cropped_image_window = tk.Toplevel(self.root)
-        self.initialize_cropped_image_window()
+        # Create a window for displaying the cropped image (shutting this feature off for now)
+        # self.cropped_image_window = tk.Toplevel(self.root)
+        # self.initialize_cropped_image_window()
 
         # Call the draw_rect and update_webcam functions periodically
         self.draw_rect()
@@ -109,11 +113,11 @@ class RectAdjustmentApp:
         self.label_var.set(f"Rectangle Parameters: {[int(x / self.scale_factor) for x in self.rect]}")
 
         # Display the cropped_image in the borderless and fullscreen window
-        if self.cropped_image is not None:
-            cropped_image_rgb = cv2.cvtColor(self.cropped_image, cv2.COLOR_BGR2RGB)
-            img_tk_cropped = ImageTk.PhotoImage(image=Image.fromarray(cropped_image_rgb))
-            self.cropped_image_canvas.create_image(0, 0, anchor=tk.NW, image=img_tk_cropped)
-            self.cropped_image_canvas.image = img_tk_cropped
+        # if self.cropped_image is not None:
+        #     cropped_image_rgb = cv2.cvtColor(self.cropped_image, cv2.COLOR_BGR2RGB)
+        #     img_tk_cropped = ImageTk.PhotoImage(image=Image.fromarray(cropped_image_rgb))
+        #     self.cropped_image_canvas.create_image(0, 0, anchor=tk.NW, image=img_tk_cropped)
+        #     self.cropped_image_canvas.image = img_tk_cropped
 
         # Call the draw_rect function again after a delay (in milliseconds)
         self.root.after(100, self.draw_rect)
@@ -176,6 +180,7 @@ class RectAdjustmentApp:
 
     def update_webcam(self):
         # Capture frame from the webcam
+        return
         ret, frame = self.cap.read()
         max_width = int(self.root.winfo_screenwidth() * 2 / 5)
         max_height = int(self.root.winfo_screenheight() * 4 / 5)
@@ -197,7 +202,9 @@ class RectAdjustmentApp:
         self.root.after(100, self.update_webcam)
 
     def save_rect(self):
-        print(self.rect)
+        actual_rect = [int(x / self.scale_factor) for x in self.rect]
+        self.set_rect(actual_rect)
+        self.root.destroy()
 
     def load_new_image(self):
         file_path = filedialog.askopenfilename(title="Select Image File", filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
@@ -218,7 +225,12 @@ if __name__ == '__main__':
     initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]] # Initial rectangle coordinates
 
     try:
-        app = RectAdjustmentApp(image_path, initial_rect)
+        current_rec = [None]  # something mutable
+        def set_rect(cam_rect):
+            current_rec[0] = cam_rect
+
+        app = RectAdjustmentAppProjection(image_path, set_rect, rect=initial_rect)
         app.root.mainloop()
+        print(current_rec)
     except ValueError as e:
         print(f"Error: {e}")
