@@ -10,16 +10,13 @@ from image_processing import generate_projection
 
 
 class RectAdjustmentAppProjection:
-    def __init__(self, image_path, set_rect, rect=None):
+    def __init__(self, image, set_rect, rect=None):
 
         if rect is None:
             rect = [int(0.4 * x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]]
 
-        self.image = cv2.imread(image_path)
+        self.image = image
         self.cropped_image = None
-
-        if self.image is None:
-            raise ValueError(f"Error loading image from path: {image_path}")
 
         self.rect = rect
         self.set_rect = set_rect  # function
@@ -223,13 +220,13 @@ class RectAdjustmentAppProjection:
 if __name__ == '__main__':
     image_path = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\uncropped_images\board1_uncropped.jpg"
     initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]] # Initial rectangle coordinates
-
+    image_in = cv2.imread(image_path)
     try:
         current_rec = [None]  # something mutable
         def set_rect(cam_rect):
             current_rec[0] = cam_rect
 
-        app = RectAdjustmentAppProjection(image_path, set_rect, rect=initial_rect)
+        app = RectAdjustmentAppProjection(image_in, set_rect, rect=initial_rect)
         app.root.mainloop()
         print(current_rec)
     except ValueError as e:
