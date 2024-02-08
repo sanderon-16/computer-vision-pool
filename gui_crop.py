@@ -7,7 +7,9 @@ import os
 from image_processing import transform_board
 
 class RectAdjustmentApp:
-    def __init__(self, image, rect, set_rect):
+    def __init__(self, image, set_rect, rect=None):
+        if rect is None:
+            rect = [int(0.4 * x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]]
         self.image = image
         self.cropped_image = None
 
@@ -182,7 +184,7 @@ if __name__ == '__main__':
         current_rec = [None]  # something mutable
         def set_rect(cam_rect):
             current_rec[0] = cam_rect
-        app = RectAdjustmentApp(image_in, initial_rect, set_rect)
+        app = RectAdjustmentApp(image_in, set_rect, rect=initial_rect)
         app.root.mainloop()
         print(current_rec)
 
