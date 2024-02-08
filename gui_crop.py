@@ -25,8 +25,12 @@ class RectAdjustmentApp:
         screen_height = self.root.winfo_screenheight()
         self.root.geometry(f"{screen_width}x{screen_height}")
 
-        self.canvas_original = tk.Canvas(self.root, width=self.image.shape[1], height=self.image.shape[0])
-        self.canvas_original.pack(side=tk.LEFT, padx=10, pady=10)
+        # Calculate maximum image size based on 2/5 of the window size
+        max_width = int(self.root.winfo_screenwidth() * 3 / 5)
+        max_height = int(self.root.winfo_screenheight() * 4 / 5)
+
+        self.canvas_original = tk.Canvas(self.root, width=max_width, height=max_height)
+        self.canvas_original.pack(side=tk.LEFT ,padx=10, pady=10)
 
         # Label to display rectangle parameters
         self.label_var = tk.StringVar()
@@ -34,9 +38,6 @@ class RectAdjustmentApp:
         self.label = tk.Label(self.root, textvariable=self.label_var)
         self.label.pack(side=tk.TOP, pady=10)
 
-        # Calculate maximum image size based on 2/5 of the window size
-        max_width = int(self.root.winfo_screenwidth() * 2 / 5)
-        max_height = int(self.root.winfo_screenheight() * 4 / 5)
 
         # Determine the scaling factor
         scale_factor_width = max_width / self.image.shape[1]
@@ -59,6 +60,7 @@ class RectAdjustmentApp:
         # Create a button for saving the image
         self.save_button = tk.Button(self.root, text="Output Rect", command=self.return_rect)
         self.save_button.pack(side=tk.TOP, pady=10)
+        self.root.bind("<Escape>", lambda event: self.return_rect())
 
         # Create a button for loading a new image
         self.load_button = tk.Button(self.root, text="Load New Image", command=self.load_new_image)
@@ -66,7 +68,7 @@ class RectAdjustmentApp:
 
         # Create a canvas for displaying the transformed image
         self.canvas_transformed = tk.Canvas(self.root, width=max_width, height=max_height)
-        self.canvas_transformed.pack(side=tk.LEFT, padx=10, pady=10)
+        self.canvas_transformed.pack(side=tk.RIGHT, padx=10, pady=10)
 
         # Initialize counter for saved images
         self.counter = 1
@@ -177,7 +179,7 @@ class RectAdjustmentApp:
 # Example usage:
 # Replace "your_image.jpg" with the path to your actual image file
 if __name__ == '__main__':
-    image_path = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\uncropped_images\board1_uncropped.jpg"
+    image_path = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\downloaded_images\board_with_ron_uncropped.jpg"
     initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]]  # Initial rectangle coordinates
     image_in = cv2.imread(image_path)
     try:
