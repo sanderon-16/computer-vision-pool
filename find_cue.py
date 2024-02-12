@@ -4,18 +4,23 @@ from cv2 import Mat
 from typing import Union, List, Tuple
 import matplotlib.pyplot as plt
 Image = Union[Mat, np.ndarray]
-from find_balls import cut_and_resize, images_formats,line_detected
 
 
+
+def images_formats(image: Image) -> Tuple[Image]:
+    rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    bilateral_color = cv2.bilateralFilter(image, 9, 75, 75)
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    gray = cv2.cvtColor(bilateral_color, cv2.COLOR_BGR2GRAY)
+    return image, rgb, hsv, bilateral_color, gray
 
 def find_cue(image: Image, white_ball_coordinate) -> List[Tuple[int]]:
     """
     :param image: Image
     :return: List of tuples containing the coordinates of the cue
     """
-    cut_and_resized_image = cut_and_resize(image)
-    cv2.waitKey(0)
-    cut_and_resized_image, rgb, hsv, bilateral_color, gray = images_formats(cut_and_resized_image)
+
+    cut_and_resized_image, rgb, hsv, bilateral_color, gray = images_formats(image)
     lines = find_lines(gray)
     if len(lines) > 1:
         print("more than one line found")
@@ -37,9 +42,6 @@ def find_lines(gray_image: Image) -> List[Tuple[int]]:
     :return: List of tuples containing the coordinates of the lines
     """
     edges = cv2.Canny(gray_image, 50, 100)
-    cv2.imshow("gray", gray_image)
-    cv2.imshow("edges", edges)
-    cv2.waitKey(0)
     rho = 1  # distance resolution in pixels of the Hough grid
     theta = np.pi / 180  # angular resolution in radians of the Hough grid
     threshold = 15  # minimum number of votes (intersections in Hough grid cell)
@@ -61,11 +63,7 @@ def find_lines(gray_image: Image) -> List[Tuple[int]]:
     for line in filtered_lines:
         for x1, y1, x2, y2 in line:
             cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
-
-
-
-    cv2.imshow("lines", line_image)
-    cv2.waitKey(0)
+    cv2.imwrite(r"images\cue1.png", line_image)
     return filtered_lines
 
 
@@ -81,10 +79,6 @@ def return_cue_parameters(gray_image: Image, line: List[Tuple[int]], white_ball_
     dis_1 = np.sqrt((x1 - x_ball) ** 2 + (y1 - y_ball) ** 2)
     dis_2 = np.sqrt((x2 - x_ball) ** 2 + (y2 - y_ball) ** 2)
     if dis_1 < dis_2:
-        return (x1-x2, y1-y2)
-    return (x2-x1, y2-y1)
+        return x1, (x1-x2, y1-y2)
+    return x2, (x2-x1, y2-y1)
 
-
-white_ball_coordinate = (500,250)
-image = cv2.imread("images\photo_from_camera.jpg")
-find_cue(image, white_ball_coordinate)

@@ -1,14 +1,11 @@
-from main import Ball
 import cv2
 import numpy as np
 from cv2 import Mat
 from typing import Union, List, Tuple
-import matplotlib.pyplot as plt
 Image = Union[Mat, np.ndarray]
 
 
-
-def find_balls(image: Image) -> List[Tuple[int]]:
+def find_balls(image: Image) -> Union[List[Tuple[int]], Image]:
     """
     param1: image
     Find all the balls in an image and return a list of Ball objects
@@ -26,7 +23,7 @@ def find_balls(image: Image) -> List[Tuple[int]]:
     without_linear_lines = find_lines_and_remove(dilation)
     contours = line_detected(dilation)
     centers, original_image_with_balls = find_ball_on_edges_image(without_linear_lines, bilateral_color, contours)
-    return centers
+    return centers, original_image_with_balls
 
 def find_ball_on_edges_image(gray_image: Image, original_image: Image, contours: List[Tuple[int]]):
     """
@@ -65,17 +62,16 @@ def cut_and_resize(image: Image) -> Image:
     height = int(image.shape[0] * scale_percent / 100)
     # change the image
     image = cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
-
     image_without_frame = image.copy()
-    # thickness = 30
-    # # Black out the top, bottom, left, and right parts
-    # image_without_frame[:thickness, :] = 0  # Top
-    # image_without_frame[-thickness:, :] = 0  # Bottom
-    # image_without_frame[:, :thickness] = 0  # Left
-    # image_without_frame[:, -thickness:] = 0  # Right
+    thickness = 30
+    # Black out the top, bottom, left, and right parts
+    image_without_frame[:thickness, :] = 0  # Top
+    image_without_frame[-thickness:, :] = 0  # Bottom
+    image_without_frame[:, :thickness] = 0  # Left
+    image_without_frame[:, -thickness:] = 0  # Right
     return image_without_frame
 
-def images_formats(image: Image) -> Tuple[Image]:
+def images_formats(image: Image) -> Tuple[Image, Image, Image, Image, Image]:
     rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     bilateral_color = cv2.bilateralFilter(image, 9, 75, 75)
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -111,8 +107,7 @@ def line_detected(edges) -> Image:
 
 
 
-
-def find_lines_and_remove(edges) -> List[Tuple[int]]:
+def find_lines_and_remove(edges) -> Image:
     """
     :param image: Image
     :return: List of tuples containing the coordinates of the lines
@@ -185,11 +180,14 @@ def yiq_to_gray(yiq_image):
     return gray_image
 
 
-def create_ball_objects():
-    pass
 
-def find_cue_ball():
-    pass
 
-image = cv2.imread(r"output_images\original_image_1.png")
-centers = find_balls(image)
+
+
+
+
+
+
+
+
+
