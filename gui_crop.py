@@ -7,14 +7,14 @@ import os
 from image_processing import transform_board
 
 class RectAdjustmentApp:
-    def __init__(self, image_path, rect):
-        self.image = cv2.imread(image_path)
+    def __init__(self, image, set_rect, rect=None):
+        if rect is None:
+            rect = [int(0.4 * x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]]
+        self.image = image
         self.cropped_image = None
 
-        if self.image is None:
-            raise ValueError(f"Error loading image from path: {image_path}")
-
         self.rect = rect
+        self.set_rect = set_rect  # function
         self.selected_corner = None
 
         self.root = tk.Tk()
@@ -25,7 +25,11 @@ class RectAdjustmentApp:
         screen_height = self.root.winfo_screenheight()
         self.root.geometry(f"{screen_width}x{screen_height}")
 
-        self.canvas_original = tk.Canvas(self.root, width=self.image.shape[1], height=self.image.shape[0])
+        # Calculate maximum image size based on 2/5 of the window size
+        max_width = int(self.root.winfo_screenwidth() * 3 / 5)
+        max_height = int(self.root.winfo_screenheight() * 4 / 5)
+
+        self.canvas_original = tk.Canvas(self.root, width=max_width, height=max_height)
         self.canvas_original.pack(side=tk.LEFT, padx=10, pady=10)
 
         # Label to display rectangle parameters
@@ -34,9 +38,6 @@ class RectAdjustmentApp:
         self.label = tk.Label(self.root, textvariable=self.label_var)
         self.label.pack(side=tk.TOP, pady=10)
 
-        # Calculate maximum image size based on 2/5 of the window size
-        max_width = int(self.root.winfo_screenwidth() * 2 / 5)
-        max_height = int(self.root.winfo_screenheight() * 4 / 5)
 
         # Determine the scaling factor
         scale_factor_width = max_width / self.image.shape[1]
@@ -57,8 +58,9 @@ class RectAdjustmentApp:
         self.transform_button.pack(side=tk.TOP, pady=10)
 
         # Create a button for saving the image
-        self.save_button = tk.Button(self.root, text="Save Image", command=self.save_image)
+        self.save_button = tk.Button(self.root, text="Output Rect", command=self.return_rect)
         self.save_button.pack(side=tk.TOP, pady=10)
+        self.root.bind("<Escape>", lambda event: self.return_rect())
 
         # Create a button for loading a new image
         self.load_button = tk.Button(self.root, text="Load New Image", command=self.load_new_image)
@@ -66,7 +68,7 @@ class RectAdjustmentApp:
 
         # Create a canvas for displaying the transformed image
         self.canvas_transformed = tk.Canvas(self.root, width=max_width, height=max_height)
-        self.canvas_transformed.pack(side=tk.LEFT, padx=10, pady=10)
+        self.canvas_transformed.pack(side=tk.RIGHT, padx=10, pady=10)
 
         # Initialize counter for saved images
         self.counter = 1
@@ -155,21 +157,10 @@ class RectAdjustmentApp:
         self.canvas_transformed.image = img_tk_transformed
         self.cropped_image = transformed_image
 
-    def save_image(self):
-        base_directory = os.getcwd()  # Get the current working directory
-        output_subdirectory = "output_images"  # Subdirectory for saving images
-
-        # Create the output directory if it doesn't exist
-        output_directory = os.path.join(base_directory, output_subdirectory)
-        os.makedirs(output_directory, exist_ok=True)
-
-        # Save the image with a unique name based on the counter
-        image_name = f'cropped_board_{self.counter}.png'
-        image_path = os.path.join(output_directory, image_name)
-        cv2.imwrite(image_path, self.cropped_image)
-
-        # Increment the counter
-        self.counter += 1
+    def return_rect(self):
+        actual_rect = [int(x / self.scale_factor) for x in self.rect]
+        self.set_rect(actual_rect)
+        self.root.destroy()
 
     def load_new_image(self):
         file_path = filedialog.askopenfilename(title="Select Image File", filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
@@ -188,11 +179,16 @@ class RectAdjustmentApp:
 # Example usage:
 # Replace "your_image.jpg" with the path to your actual image file
 if __name__ == '__main__':
-    image_path = (r"uncropped_images\image1.jpg")
-    initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]] # Initial rectangle coordinates
-
+    image_path = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\downloaded_images\board_with_ron_uncropped.jpg"
+    initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]]  # Initial rectangle coordinates
+    image_in = cv2.imread(image_path)
     try:
-        app = RectAdjustmentApp(image_path, initial_rect)
+        current_rec = [None]  # something mutable
+        def set_rect(cam_rect):
+            current_rec[0] = cam_rect
+        app = RectAdjustmentApp(image_in, set_rect, rect=initial_rect)
         app.root.mainloop()
+        print(current_rec)
+
     except ValueError as e:
         print(f"Error: {e}")
