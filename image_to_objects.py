@@ -93,8 +93,3 @@ def find_objects(image: Image):
     direction_np = np.array(direction)
     cue = Cue(cue_edge_np, direction_np)
     return board, balls, cue_ball, cue
-
-
-image = cv2.imread(r"output_images\cropped_board_1.png")
-cv2.imwrite(r"images\original1.png", image)
-
