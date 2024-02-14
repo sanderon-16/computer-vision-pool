@@ -6,7 +6,7 @@ from PIL import Image, ImageTk
 import tkinter as tk
 from tkinter import filedialog
 from functools import partial
-from image_processing import generate_projection
+from .image_processing import generate_projection
 
 
 class RectAdjustmentAppProjection:
@@ -15,7 +15,8 @@ class RectAdjustmentAppProjection:
         if rect is None:
             rect = [int(0.4 * x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]]
 
-        self.image = image
+        # self.image = image
+        self.image = np.ones_like(image) * 200
         self.cropped_image = None
 
         self.rect = rect
@@ -78,7 +79,6 @@ class RectAdjustmentAppProjection:
 
         # Call the draw_rect and update_webcam functions periodically
         self.draw_rect()
-        self.update_webcam()
 
     def initialize_cropped_image_window(self):
         # Set the window attributes
@@ -111,11 +111,11 @@ class RectAdjustmentAppProjection:
         self.label_var.set(f"Rectangle Parameters: {[int(x / self.scale_factor) for x in self.rect]}")
 
         # Display the cropped_image in the borderless and fullscreen window
-        # if self.cropped_image is not None:
-        #     cropped_image_rgb = cv2.cvtColor(self.cropped_image, cv2.COLOR_BGR2RGB)
-        #     img_tk_cropped = ImageTk.PhotoImage(image=Image.fromarray(cropped_image_rgb))
-        #     self.cropped_image_canvas.create_image(0, 0, anchor=tk.NW, image=img_tk_cropped)
-        #     self.cropped_image_canvas.image = img_tk_cropped
+        if self.cropped_image is not None:
+            cropped_image_rgb = cv2.cvtColor(self.cropped_image, cv2.COLOR_BGR2RGB)
+            img_tk_cropped = ImageTk.PhotoImage(image=Image.fromarray(cropped_image_rgb))
+            self.cropped_image_canvas.create_image(0, 0, anchor=tk.NW, image=img_tk_cropped)
+            self.cropped_image_canvas.image = img_tk_cropped
 
         # Call the draw_rect function again after a delay (in milliseconds)
         self.root.after(100, self.draw_rect)
@@ -175,29 +175,6 @@ class RectAdjustmentAppProjection:
         self.canvas_original.create_image(0, 0, anchor=tk.NW, image=img_tk_transformed)
         self.canvas_original.image = img_tk_transformed
         self.cropped_image = transformed_image
-
-    def update_webcam(self):
-        # Capture frame from the webcam
-        return
-        ret, frame = self.cap.read()
-        max_width = int(self.root.winfo_screenwidth() * 2 / 5)
-        max_height = int(self.root.winfo_screenheight() * 4 / 5)
-        if ret:
-            # Convert the frame from BGR to RGB
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-            # Resize the frame to match the canvas size
-            frame_resized = cv2.resize(frame_rgb, (max_width, max_height))
-
-            # Convert the frame to ImageTk format
-            img_tk_webcam = ImageTk.PhotoImage(image=Image.fromarray(frame_resized))
-
-            # Display the frame on the canvas
-            self.canvas_webcam.create_image(0, 0, anchor=tk.NW, image=img_tk_webcam)
-            self.canvas_webcam.image = img_tk_webcam
-
-        # Call the update_webcam function again after a delay (in milliseconds)
-        self.root.after(100, self.update_webcam)
 
     def save_rect(self):
         actual_rect = [int(x / self.scale_factor) for x in self.rect]

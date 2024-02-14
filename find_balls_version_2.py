@@ -4,9 +4,6 @@ from cv2 import Mat
 from typing import Union, List, Tuple
 Image = Union[Mat, np.ndarray]
 
-
-
-
 def find_balls(balls_image: Image, original_image: Image) -> Union[List[Tuple[int]], Image]:
     """
     param1: image

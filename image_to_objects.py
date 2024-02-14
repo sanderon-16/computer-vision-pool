@@ -1,9 +1,9 @@
 from typing import List, Tuple
 import cv2
 import numpy as np
-from find_balls import find_balls, Image
-from find_cue import find_cue
-from pool_structure import WhiteBall, Color, Ball, Board, Cue
+from .find_balls import find_balls, Image
+from .find_cue import find_cue
+from .pool_structure import WhiteBall, Color, Ball, Board, Cue
 
 
 def find_cue_ball_center(centers: Tuple[int], image: Image):
