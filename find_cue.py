@@ -53,6 +53,8 @@ def find_lines(gray_image: Image) -> List[Tuple[int]]:
                             min_line_length, max_line_gap)
     lines = [line for line in lines if abs(line[0][0] - line[0][2]) > 20 and abs(line[0][1] - line[0][3]) > 20]
     filtered_lines = []
+    if lines is None:
+        return filtered_lines
     for line in lines:
         if not filtered_lines:
             filtered_lines.append(line)
