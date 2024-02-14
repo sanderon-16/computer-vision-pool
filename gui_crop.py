@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
 import os
-from .image_processing import transform_board
+from image_processing import transform_board, generate_projection
 
 class RectAdjustmentApp:
     def __init__(self, image, set_rect, rect=None):
@@ -57,7 +57,7 @@ class RectAdjustmentApp:
         self.transform_button = tk.Button(self.root, text="Transform Image", command=self.transform_and_display)
         self.transform_button.pack(side=tk.TOP, pady=10)
 
-        # Create a button for saving the image
+        # Create a button for saving the rect
         self.save_button = tk.Button(self.root, text="Output Rect", command=self.return_rect)
         self.save_button.pack(side=tk.TOP, pady=10)
         self.root.bind("<Escape>", lambda event: self.return_rect())
@@ -65,6 +65,10 @@ class RectAdjustmentApp:
         # Create a button for loading a new image
         self.load_button = tk.Button(self.root, text="Load New Image", command=self.load_new_image)
         self.load_button.pack(side=tk.TOP, pady=10)
+
+        # Create a button for saving the image
+        self.save_image_button = tk.Button(self.root, text="Save Image", command=self.save_image)
+        self.save_image_button.pack(side=tk.TOP, pady=10)
 
         # Create a canvas for displaying the transformed image
         self.canvas_transformed = tk.Canvas(self.root, width=max_width, height=max_height)
@@ -161,6 +165,15 @@ class RectAdjustmentApp:
         actual_rect = [int(x / self.scale_factor) for x in self.rect]
         self.set_rect(actual_rect)
         self.root.destroy()
+
+    def save_image(self):
+        # Transform the image using the specified rectangle
+        actual_rect = [int(x / self.scale_factor) for x in self.rect]
+        transformed_image = transform_board(self.image, actual_rect)
+        # Display the transformed image on the canvas
+        image_with_black = generate_projection(transformed_image, actual_rect)
+        cv2.imwrite(fr"output_images\black_bg{self.counter}.jpg", image_with_black)
+        self.counter += 1
 
     def load_new_image(self):
         file_path = filedialog.askopenfilename(title="Select Image File", filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
