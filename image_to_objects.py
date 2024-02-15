@@ -1,9 +1,9 @@
 from typing import List, Tuple
 import cv2
 import numpy as np
-from find_balls import find_balls, Image
-from find_cue import find_cue
-from pool_structure import WhiteBall, Color, Ball, Board, Cue
+from .find_balls import find_balls, Image
+from .find_cue import find_cue
+from .pool_structure import WhiteBall, Color, Ball, Board, Cue
 
 
 def find_cue_ball_center(centers: Tuple[int], image: Image):
@@ -93,8 +93,3 @@ def find_objects(image: Image):
     direction_np = np.array(direction)
     cue = Cue(cue_edge_np, direction_np)
     return board, balls, cue_ball, cue
-
-
-image = cv2.imread(r"output_images\cropped_board_1.png")
-cv2.imwrite(r"images\original1.png", image)
-

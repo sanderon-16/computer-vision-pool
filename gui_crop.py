@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
 import os
-from image_processing import transform_board
+from .image_processing import transform_board
 
 class RectAdjustmentApp:
     def __init__(self, image, set_rect, rect=None):
