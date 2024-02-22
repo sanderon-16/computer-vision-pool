@@ -57,7 +57,7 @@ class RectAdjustmentApp:
         self.transform_button = tk.Button(self.root, text="Transform Image", command=self.transform_and_display)
         self.transform_button.pack(side=tk.TOP, pady=10)
 
-        # Create a button for saving the rect
+        # Create a button for saving the image
         self.save_button = tk.Button(self.root, text="Output Rect", command=self.return_rect)
         self.save_button.pack(side=tk.TOP, pady=10)
         self.root.bind("<Escape>", lambda event: self.return_rect())
