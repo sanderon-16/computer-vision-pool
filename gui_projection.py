@@ -6,7 +6,7 @@ from PIL import Image, ImageTk
 import tkinter as tk
 from tkinter import filedialog
 from functools import partial
-from .image_processing import generate_projection
+from image_processing import generate_projection
 
 
 class RectAdjustmentAppProjection:
@@ -196,7 +196,7 @@ class RectAdjustmentAppProjection:
 
 
 if __name__ == '__main__':
-    image_path = r"C:\Users\TLP-299\PycharmProjects\computer-vision-pool\uncropped_images\board1_uncropped.jpg"
+    image_path = r"C:\Users\TLP\PycharmProjects\computer-vision-pool\photos_1\board_balls_and_cue.jpg"
     initial_rect = [int(0.4*x) for x in [817, 324, 1186, 329, 1364, 836, 709, 831]] # Initial rectangle coordinates
     image_in = cv2.imread(image_path)
     try:
